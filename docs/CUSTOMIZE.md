@@ -65,14 +65,28 @@ zstyle ':zebrafish:external' plugins $myplugins
 
 ## Paths
 
+Many other shells like [fish] store data and cache files in separate locations from your
+configs. Separating these location helps with things like storing your Zsh configuration
+in a git repository without unintentially committing or deleting things you didn't mean
+to. Zebrafish follows these concepts and respects the
+[XDG base directory specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html).
+
+The relevant directories are as follows:
+
+| variable           | typical path(s)                       |
+| ------------------ | ------------------------------------- |
+| `$XDG_CONFIG_HOME` | `~/.config`                           |
+| `$XDG_DATA_HOME`   | `~/.local/share`                      |
+| `$XDG_CACHE_HOME`  | `~/.cache`                            |
+| `$ZDOTDIR`         | `~/.config/zsh`, `~/.zsh`, or `$HOME` |
+
+If you prefer to set your own paths, you can and Zebrafish will respect them.
+
 ### History file
 
-Zebrafish will store your Zsh history file in `$XDG_DATA_HOME/zsh/history`. Many other
-shells like [fish] store data files in separate places from config files.
-
-If you don't prefer this, you can restore your zcompdump file to the Zsh default
-location or wherever else you prefer by setting the `$HISTFILE` variable.
-
+Zebrafish will store your Zsh history file in `$XDG_DATA_HOME/zsh/zsh_history`. If you
+don't prefer this, you can restore your zsh_history file to the Zsh default location or
+wherever else you want by setting the `$HISTFILE` variable.
 
 ```zsh
 HISTFILE=${ZDOTDIR:-~}/.zsh_history
@@ -80,11 +94,9 @@ HISTFILE=${ZDOTDIR:-~}/.zsh_history
 
 ### compinit dump file
 
-Zebrafish will store your zcompdump file in `$XDG_CACHE_HOME/zsh/zcompdump`. Many other
-shells like [fish] store cache files in separate places from config files.
-
-If you don't prefer this, you can restore your zcompdump file to the Zsh default
-location or wherever else you prefer by setting the `$ZSH_COMPDUMP` variable.
+Zebrafish will store your zcompdump file in `$XDG_CACHE_HOME/zsh/zcompdump`. If you
+don't prefer this, you can restore your zcompdump file to the Zsh default location or
+wherever else you want by setting the `$ZSH_COMPDUMP` variable.
 
 ```zsh
 ZSH_COMPDUMP=${ZDOTDIR:-~}/.zcompdump
@@ -92,31 +104,45 @@ ZSH_COMPDUMP=${ZDOTDIR:-~}/.zcompdump
 
 ### zshrc.d directory
 
-Zebrafish will source config files from `~/.config/zsh/zshrc.d` if it exists. If you
-prefer to store config files in another location, you can set the following `zstyle`:
+Zebrafish will source config files from `${ZDOTDIR:-$XDG_CONFIG_HOME/zsh}/zshrc.d` if it
+exists. If you prefer to store config files in another location, you can set the
+following `zstyle`:
 
 ```zsh
+# replace ~/.zconf.d with whatever you want
 zstyle ':zebrafish:zshrc.d' path ~/.zconf.d
 ```
 
 ### zfunctions directory
 
-Zebrafish will autoload all function files in `~/.config/zsh/functions` if it exists. If
-you prefer to store autoload function files in another location, you can set the
-following `zstyle`:
+Zebrafish will autoload all function files in `${ZDOTDIR:-~/.config/zsh}/functions` if
+it exists. If you prefer to store autoload function files in another location, you can
+set the following `zstyle`:
 
 ```zsh
+# replace ~/.zfunctions with whatever you want
 zstyle ':zebrafish:zfunctions' path ~/.zfunctions
 ```
 
 ### zcompletions directory
 
-Zebrafish will source completions files from `~/.config/zsh/completions` if it exists.
-If you prefer to store completion files in another location, you can set the following
-`zstyle`:
+Zebrafish will source completions files from `${ZDOTDIR:-~/.config/zsh}/completions` if
+it exists. If you prefer to store completion files in another location, you can set the
+following `zstyle`:
 
 ```zsh
+# replace ~/.zcompletions with whatever you want
 zstyle ':zebrafish:zcompletions' path ~/.zcompletions
+```
+
+### Plugins directory
+
+Zebrafish will store plugins in `${ZDOTDIR:-~/.config/zsh}/plugins`. If you prefer to
+store plugins in another location, you can set the following `zstyle`:
+
+```zsh
+# replace ~/.zplugins with whatever you want
+zstyle ':zebrafish:plugins' path ~/.zplugins
 ```
 
 ## Use a different plugin manager
