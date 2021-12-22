@@ -1,6 +1,6 @@
 # Zebrafish
 #   > A lightweight, full-featured, blazing-fast Zsh configuration in just one file. :zebra: :fish:
-# Version:      v0.7.0
+# Version:      v0.8.0
 # Project Home: https://github.com/zshzoo/zebrafish
 # Licenses:
 #   - Zebrafish: MIT (https://github.com/zshzoo/zebrafish/blob/main/LICENSE)
@@ -15,7 +15,7 @@
   [[ ${ZF_PROFILE:-0} -eq 0 ]] || zmodload zsh/zprof
   alias zf-profile="ZF_PROFILE=1 zsh"
   export ZEBRAFISH="${${(%):-%x}:a}"
-  export ZF_VERSION="0.7.0"
+  export ZF_VERSION="0.8.0"
 }
 #endregion
 
