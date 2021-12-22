@@ -14,9 +14,8 @@
   # be sure to start profiling at the very beginning
   [[ ${ZF_PROFILE:-0} -eq 0 ]] || zmodload zsh/zprof
   alias zf-profile="ZF_PROFILE=1 zsh"
-  typeset -g ZEBRAFISH ZF_VERSION
-  ZEBRAFISH="${${(%):-%x}:a}"
-  ZF_VERSION="0.7.0"
+  export ZEBRAFISH="${${(%):-%x}:a}"
+  export ZF_VERSION="0.7.0"
 }
 #endregion
 
