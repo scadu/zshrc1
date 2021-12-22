@@ -66,8 +66,8 @@ Feel free to use it as-is, build off it, or fork it and make it entirely your ow
 | zfunctions          | Use a `functions` directory in `$ZDOTDIR` for your custom Zsh functions    |
 | zshrcd              | Use a `zshrc.d` directory in `$ZDOTDIR` to load config files               |
 | zcompletions        | Use a `completions` directory in `$ZDOTDIR` to add your custom completions |
-| plugins             | Include popular plugins from [zsh-users]                                   |
-| prompt              | Use the amazing [starship] prompt                                          |
+| plugins             | Include external Zsh plugins from git repos                                |
+| prompt              | Use the amazing [Starship][starship] prompt                                |
 | compinit            | Initialize completions                                                     |
 
 ## Plugins
