@@ -1,5 +1,6 @@
 # Zebrafish
-# > A lightweight, full-featured, blazing-fast Zsh configuration in just one file. :zebra: :fish:
+#   > A lightweight, full-featured, blazing-fast Zsh configuration in just one file. :zebra: :fish:
+# Version:      v0.7.0
 # Project Home: https://github.com/zshzoo/zebrafish
 # Licenses:
 #   - Zebrafish: MIT (https://github.com/zshzoo/zebrafish/blob/main/LICENSE)
@@ -7,58 +8,25 @@
 #   - Prezto:    MIT (https://github.com/sorin-ionescu/prezto/blob/master/LICENSE)
 #   - Zim:       MIT (https://github.com/zimfw/zimfw/blob/master/LICENSE)
 #   - ZshZoo:    MIT (https://github.com/zshzoo)
-ZF_VERSION="0.7.0"
 
-# Profiling
-# load zprof first thing in case we want to profile performance
-[[ ${ZF_PROFILE:-0} -eq 0 ]] || zmodload zsh/zprof
-alias zf-profile="ZF_PROFILE=1 zsh"
-
-#
-#region Setup
-#
+#region setup
 () {
-  # drive zebrafish with zstyle settings
-  typeset -ga zf_features=(
-    environment
-    zshopts
-    history
-    completion-styles
-    keybindings
-    termtitle
-    help
-    colorized-man-pages
-    zfunctions
-    zshrcd
-    zcompletions
-    plugins
-    prompt
-    compinit
-  )
-  local disabled_features
-  zstyle -a ':zebrafish:disable' features 'disabled_features' || disabled_features=()
-  zf_features=${zf_features:|disabled_features}
-
-  typeset -ga zf_plugins
-  zstyle -a ':zebrafish:external' plugins 'zf_plugins' || \
-    zf_plugins=(
-      zsh-users/zsh-autosuggestions
-      zsh-users/zsh-history-substring-search
-      zsh-users/zsh-syntax-highlighting
-    )
+  # be sure to start profiling at the very beginning
+  [[ ${ZF_PROFILE:-0} -eq 0 ]] || zmodload zsh/zprof
+  alias zf-profile="ZF_PROFILE=1 zsh"
+  typeset -g ZEBRAFISH ZF_VERSION
+  ZEBRAFISH="${${(%):-%x}:a}"
+  ZF_VERSION="0.7.0"
 }
 #endregion
 
-
-#
-#region Environment
-#
-# https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
-# https://wiki.archlinux.org/index.php/XDG_Base_Directory
-# https://wiki.archlinux.org/index.php/XDG_user_directories
-# https://github.com/zshzoo/environment
-#
-if (($zf_features[(Ie)environment])); then
+#region environment
+# references:
+# - https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
+# - https://wiki.archlinux.org/index.php/XDG_Base_Directory
+# - https://wiki.archlinux.org/index.php/XDG_user_directories
+# - https://github.com/zshzoo/environment
+function zf-environment() {
   # XDG
   export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-~/.config}
   export XDG_CACHE_HOME=${XDG_CACHE_HOME:-~/.cache}
@@ -104,17 +72,14 @@ if (($zf_features[(Ie)environment])); then
 
   # treat these characters as part of a word
   export WORDCHARS=${WORDCHARS:-'*?_-.[]~&;!#$%^(){}<>'}
-fi
+}
 #endregion
 
-
-#
-#region Zsh Options
-#
-# http://zsh.sourceforge.net/Doc/Release/Options.html
-# https://github.com/zshzoo/setopts
-#
-if (($zf_features[(Ie)zshopts])); then
+#region zshopts
+# references:
+# - http://zsh.sourceforge.net/Doc/Release/Options.html
+# - https://github.com/zshzoo/setopts
+function zf-zshopts() {
   # changing directories
   # http://zsh.sourceforge.net/Doc/Release/Options.html#Changing-Directories
   setopt auto_cd                 # if a command isn't valid, but is a directory, cd to that dir
@@ -179,16 +144,15 @@ if (($zf_features[(Ie)zshopts])); then
   setopt no_beep                # be quiet!
   setopt combining_chars        # combine zero-length punctuation characters (accents) with the base character
   setopt emacs                  # use emacs keybindings in the shell
-fi
+}
 #endregion
 
+#region history
+# references:
+# - http://zsh.sourceforge.net/Doc/Release/Options.html#History
+function zf-history() {
+  local zf_datadir=${XDG_DATA_HOME:-~/.local/share}/zsh
 
-#
-#region History
-#
-# http://zsh.sourceforge.net/Doc/Release/Options.html#History
-#
-if (($zf_features[(Ie)history])); then
   setopt append_history          # append to history file
   setopt extended_history        # write the history file in the ':start:elapsed;command' format
   setopt no_hist_beep            # don't beep when attempting to access a missing history entry
@@ -205,20 +169,17 @@ if (($zf_features[(Ie)history])); then
   setopt no_share_history        # don't share history between all sessions
 
   # $HISTFILE belongs in the data home, not with zsh configs
-  HISTFILE=${XDG_DATA_HOME:-~/.local/share}/zsh/history
+  HISTFILE=$zf_datadir/zsh_history
   [[ -f "$HISTFILE" ]] || { mkdir -p "$HISTFILE:h" && touch "$HISTFILE" }
 
   # you can set $SAVEHIST and $HISTSIZE to anything greater than the ZSH defaults
   # (1000 and 2000 respectively), but if not we make them way bigger.
   [[ $SAVEHIST -gt 1000 ]] || SAVEHIST=20000
   [[ $HISTSIZE -gt 2000 ]] || HISTSIZE=100000
-fi
+}
 #endregion
 
-
-#
-#region Completion Styles
-#
+#region completion-styles
 function zf-completion-styles() {
   # https://github.com/sorin-ionescu/prezto/blob/master/modules/completion/init.zsh
   # Defaults.
@@ -339,58 +300,15 @@ function zf-completion-styles() {
   zstyle ':completion:*:(ssh|scp|rsync):*:hosts-domain' ignored-patterns '<->.<->.<->.<->' '^[-[:alnum:]]##(.[-[:alnum:]]##)##' '*@*'
   zstyle ':completion:*:(ssh|scp|rsync):*:hosts-ipaddr' ignored-patterns '^(<->.<->.<->.<->|(|::)([[:xdigit:].]##:(#c,2))##(|%*))' '127.0.0.<->' '255.255.255.255' '::1' 'fe80::*'
 }
-(($zf_features[(Ie)completion-styles])) && zf-completion-styles
 #endregion
 
-
-#
-#region Autoload Functions
-#
-# https://github.com/zshzoo/zfunctions
-#
-function zf-zfunctions() {
-  local fndir fnfile
-  zstyle -s ':zebrafish:zfunctions' path 'fndir' \
-    || fndir=${ZDOTDIR:-~/.config/zsh}/functions
-  [[ -d $fndir ]] || return 1
-  fpath+=$fndir
-  for fnfile in $fndir/**/*(N); do
-    if test -f $fnfile; then
-      autoload -Uz "$fnfile"
-    fi
-  done
-}
-(($zf_features[(Ie)zfunctions])) && zf-zfunctions
-#endregion
-
-
-#
-#region Custom zcompletions
-#
-function zf-zcompletions() {
-  # load additional completions
-  local f compdir
-  zstyle -s ':zebrafish:zcompletions' path 'compdir' \
-    || compdir=${ZDOTDIR:-~/.config/zsh}/completions
-  [[ -d $compdir ]] || return 1
-  fpath+=$compdir
-  for f in "$compdir"/*.zsh(.N); do
-    source "$f"
-  done
-}
-(($zf_features[(Ie)zcompletions])) && zf-zcompletions
-#endregion
-
-
-#
-#region Key bindings
-#
-# https://github.com/ohmyzsh/ohmyzsh/blob/master/lib/key-bindings.zsh
-# https://raw.githubusercontent.com/sorin-ionescu/prezto/master/modules/editor/init.zsh
-# http://zsh.sourceforge.net/Doc/Release/Zsh-Line-Editor.html
-# http://zsh.sourceforge.net/Doc/Release/Zsh-Line-Editor.html#Zle-Builtins
-# http://zsh.sourceforge.net/Doc/Release/Zsh-Line-Editor.html#Standard-Widgets
-#
+#region keybindings
+# references:
+# - https://github.com/ohmyzsh/ohmyzsh/blob/master/lib/key-bindings.zsh
+# - https://raw.githubusercontent.com/sorin-ionescu/prezto/master/modules/editor/init.zsh
+# - http://zsh.sourceforge.net/Doc/Release/Zsh-Line-Editor.html
+# - http://zsh.sourceforge.net/Doc/Release/Zsh-Line-Editor.html#Zle-Builtins
+# - http://zsh.sourceforge.net/Doc/Release/Zsh-Line-Editor.html#Standard-Widgets
 function zf-keybindings() {
   # bind a reasonable set of common keyboard shortcuts
 
@@ -510,15 +428,11 @@ function zf-keybindings() {
   # file rename magick
   bindkey "^[m" copy-prev-shell-word
 }
-(($zf_features[(Ie)keybindings])) && zf-keybindings
 #endregion
 
-
-#
-#region Terminal
-#
-# https://github.com/zimfw/termtitle/blob/master/init.zsh
-#
+#region termtitle
+# references:
+# - https://github.com/zimfw/termtitle/blob/master/init.zsh
 function zf-termtitle() {
   # set the terminal title
   [[ ${TERM} != dumb ]] || return
@@ -544,16 +458,9 @@ function zf-termtitle() {
   for zhook (${zhooks}) add-zsh-hook ${zhook} termtitle_update
   termtitle_update  # we execute it once to initialize the window title
 }
-(($zf_features[(Ie)termtitle])) && zf-termtitle
 #endregion
 
-
-#
-#region Misc
-#
-# https://github.com/sorin-ionescu/prezto/blob/be61026920c9a0db6d775ec97a002984147b954c/init.zsh#L186-L187
-# https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/colored-man-pages
-#
+#region help
 function zf-help() {
   # run-help is great, but it's often masked by an alias to man.
   alias run-help >&/dev/null && unalias run-help
@@ -562,47 +469,40 @@ function zf-help() {
     autoload $rh
   done
 }
-(($zf_features[(Ie)help])) && zf-help
+#endregion
 
+#region colorized-man-pages
+# references:
+# - https://github.com/sorin-ionescu/prezto/blob/be61026920c9a0db6d775ec97a002984147b954c/init.zsh#L186-L187
+# - https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/colored-man-pages
 function zf-colorized-man-pages() {
-  # show man pages in color
-  export LESS_TERMCAP_mb=$'\e[01;34m'      # mb:=start blink-mode (bold,blue)
-  export LESS_TERMCAP_md=$'\e[01;34m'      # md:=start bold-mode (bold,blue)
-  export LESS_TERMCAP_so=$'\e[00;47;30m'   # so:=start standout-mode (white bg, black fg)
-  export LESS_TERMCAP_us=$'\e[04;35m'      # us:=start underline-mode (underline magenta)
-  export LESS_TERMCAP_se=$'\e[0m'          # se:=end standout-mode
-  export LESS_TERMCAP_ue=$'\e[0m'          # ue:=end underline-mode
-  export LESS_TERMCAP_me=$'\e[0m'          # me:=end modes
+  function man() {
+    # show man pages in color
+    # mb:=start blink-mode (bold,blue)
+    # md:=start bold-mode (bold,blue)
+    # so:=start standout-mode (white bg, black fg)
+    # us:=start underline-mode (underline magenta)
+    # se:=end standout-mode
+    # ue:=end underline-mode
+    # me:=end modes
+    env \
+      LESS_TERMCAP_mb=$'\e[01;34m' \
+      LESS_TERMCAP_md=$'\e[01;34m' \
+      LESS_TERMCAP_so=$'\e[00;47;30m' \
+      LESS_TERMCAP_us=$'\e[04;35m' \
+      LESS_TERMCAP_se=$'\e[0m' \
+      LESS_TERMCAP_ue=$'\e[0m' \
+      LESS_TERMCAP_me=$'\e[0m' \
+      PAGER="${commands[less]:-$PAGER}" \
+      man "$@"
+  }
 }
-(($zf_features[(Ie)colorized-man-pages])) && zf-colorized-man-pages
 #endregion
 
-
-#
-#region zshrc.d
-#
-# https://github.com/mattmc3/zshrc.d
-#
-function zf-zshrcd() {
-  local confdir f files
-  zstyle -s ':zebrafish:zshrc.d' path 'confdir' \
-    || confdir=${ZDOTDIR:-~/.config/zsh}/zshrc.d
-  [[ -d $confdir ]] || return 1
-  files=("$confdir"/*.{sh,zsh}(.N))
-  for f in ${(o)files}; do
-    case ${f:t} in '~'*) continue;; esac
-    source "$f"
-  done
-}
-(($zf_features[(Ie)zshrcd])) && zf-zshrcd
-#endregion
-
-
-#
-#region Plugins
-#
-# https://github.com/mattmc3/zsh_unplugged
-#
+#region plugins
+# references:
+# - https://github.com/romkatv/zsh-defer
+# - https://github.com/mattmc3/zsh_unplugged
 function zsh-defer() {
   # wrapper until the romkatv/zsh-defer plugin is loaded
   $@
@@ -613,9 +513,20 @@ function zf-source-plugin() {
 }
 
 function zf-plugins() {
-  local repo plugin_name plugin_root plugin_dir initfile initfiles
+  local zf_zdotdir repo plugin_name plugin_root plugin_dir initfile initfiles
+  typeset -ag zf_plugins
+  zf_zdotdir=${ZDOTDIR:-${XDG_CONFIG_HOME:-~/.config}/zsh}
+
   zstyle -s ':zebrafish:plugins' path 'plugin_root' \
-    || plugin_root=${ZDOTDIR:-~/.config/zsh}/plugins
+    || plugin_root=$zf_zdotdir/plugins
+
+  zstyle -a ':zebrafish:external' plugins 'zf_plugins' \
+    || zf_plugins=(
+      romkatv/zsh-defer
+      zsh-users/zsh-autosuggestions
+      zsh-users/zsh-history-substring-search
+      zsh-users/zsh-syntax-highlighting
+    )
 
   for repo in $zf_plugins; do
     plugin_name=${repo:t}
@@ -656,44 +567,95 @@ function zf-plugins() {
     zf-source-plugin $initfile
   done
 }
-(($zf_features[(Ie)plugins])) && zf-plugins
 #endregion
 
-
-#
-#region Prompt
-#
-# https://starship.rs/
-#
+#region prompt
+# references:
+# - https://starship.rs/
 function zf-prompt() {
-  export STARSHIP_CONFIG=${STARSHIP_CONFIG:-~/.config/starship/zebrafish.toml}
-  if [[ ! -f $STARSHIP_CONFIG ]]; then
-    mkdir -p ${STARSHIP_CONFIG:h}
-    local tomlurl='https://raw.githubusercontent.com/mattmc3/zebrafish/main/prompt/zebrafish.toml'
-    curl -fsSL $tomlurl -o $STARSHIP_CONFIG
+  if [[ -z "$STARSHIP_CONFIG" ]]; then
+    if [[ -f ${ZEBRAFISH:h}/prompt/zebrafish.toml ]]; then
+      # zebrafish was installed with the whole repo
+      STARSHIP_CONFIG=${ZEBRAFISH:h}/prompt/zebrafish.toml
+    else
+      # zebrafish was installed as a single file
+      STARSHIP_CONFIG=${XDG_CONFIG_HOME:-~/.config}/starship/zebrafish.toml
+      if [[ ! -f $STARSHIP_CONFIG ]]; then
+        mkdir -p ${STARSHIP_CONFIG:h}
+        curl -fsSL https://git.io/zebrafish-prompt -o $STARSHIP_CONFIG
+      fi
+    fi
+    export STARSHIP_CONFIG
   fi
   command -v starship &>/dev/null || sh -c "$(curl -fsSL https://starship.rs/install.sh)"
   eval "$(starship init zsh)"
 }
-(($zf_features[(Ie)prompt])) && zf-prompt
 #endregion
 
+#region zshrc.d
+# references:
+# - https://github.com/mattmc3/zshrc.d
+function zf-zshrcd() {
+  local zf_zdotdir confdir files f
+  zf_zdotdir=${ZDOTDIR:-${XDG_CONFIG_HOME:-~/.config}/zsh}
+  zstyle -s ':zebrafish:zshrc.d' path 'confdir' \
+    || confdir=$zf_zdotdir/zshrc.d
+  [[ -d $confdir ]] || return 1
+  files=("$confdir"/*.{sh,zsh}(.N))
+  for f in ${(o)files}; do
+    case ${f:t} in '~'*) continue;; esac
+    source "$f"
+  done
+}
+#endregion
 
-#
-#region Compinit
-#
-# https://github.com/sorin-ionescu/prezto/blob/master/modules/completion/init.zsh#L31-L44
-# https://github.com/sorin-ionescu/prezto/blob/master/runcoms/zlogin#L9-L15
-# http://zsh.sourceforge.net/Doc/Release/Completion-System.html#Use-of-compinit
-# https://gist.github.com/ctechols/ca1035271ad134841284#gistcomment-2894219
-# https://htr3n.github.io/2018/07/faster-zsh/
-#
+#region zunctions
+# references:
+# - https://github.com/zshzoo/zfunctions
+function zf-zfunctions() {
+  local zf_zdotdir fndir fnfile
+  zf_zdotdir=${ZDOTDIR:-${XDG_CONFIG_HOME:-~/.config}/zsh}
+  zstyle -s ':zebrafish:zfunctions' path 'fndir' \
+    || fndir=$zf_zdotdir/functions
+  [[ -d $fndir ]] || return 1
+  fpath+=$fndir
+  for fnfile in $fndir/**/*(N); do
+    if test -f $fnfile; then
+      autoload -Uz "$fnfile"
+    fi
+  done
+}
+#endregion
+
+#region zcompletions
+function zf-zcompletions() {
+  # load additional completions
+  local zf_zdotdir compdir f
+  zf_zdotdir=${ZDOTDIR:-${XDG_CONFIG_HOME:-~/.config}/zsh}
+  zstyle -s ':zebrafish:zcompletions' path 'compdir' \
+    || compdir=$zf_zdotdir/completions
+  [[ -d $compdir ]] || return 1
+  fpath+=$compdir
+  for f in "$compdir"/*.zsh(.N); do
+    source "$f"
+  done
+}
+#endregion
+
+#region compinit
+# references:
+# - https://github.com/sorin-ionescu/prezto/blob/master/modules/completion/init.zsh#L31-L44
+# - https://github.com/sorin-ionescu/prezto/blob/master/runcoms/zlogin#L9-L15
+# - http://zsh.sourceforge.net/Doc/Release/Completion-System.html#Use-of-compinit
+# - https://gist.github.com/ctechols/ca1035271ad134841284#gistcomment-2894219
+# - https://htr3n.github.io/2018/07/faster-zsh/
 function zf-compinit() {
   # run compinit in a smarter, faster way
   emulate -L zsh
   setopt localoptions extendedglob
 
-  ZSH_COMPDUMP=${ZSH_COMPDUMP:-$XDG_CACHE_HOME/zsh/zcompdump}
+  local zf_cachedir=${XDG_CACHE_HOME:-~/.cache}/zsh
+  ZSH_COMPDUMP=$zf_cachedir/zcompdump
   [[ -d "$ZSH_COMPDUMP:h" ]] || mkdir -p "$ZSH_COMPDUMP:h"
   autoload -Uz compinit
 
@@ -719,10 +681,42 @@ function zf-compinit() {
     fi
   } &!
 }
-(($zf_features[(Ie)compinit])) && zf-compinit
 #endregion
 
+#region init zebrafish
+() {
+  # zebrafish variables
+  typeset -gA zf_features
+  local disabled_features feature
 
-# done profiling
-[[ ${ZF_PROFILE:-0} -eq 0 ]] || { unset ZF_PROFILE && zprof }
-true
+  # start with everything enabled
+  zf_features=(
+    environment          true
+    zshopts              true
+    history              true
+    completion-styles    true
+    keybindings          true
+    termtitle            true
+    help                 true
+    colorized-man-pages  true
+    plugins              true
+    prompt               true
+    zfunctions           true
+    zshrcd               true
+    zcompletions         true
+    compinit             true
+  )
+  zstyle -a ':zebrafish:disable' features 'disabled_features' || disabled_features=()
+  for feature in $disabled_features; do
+    $zf_features[$feature]=false
+  done
+
+  for feature enabled in "${(@kv)zf_features}"; do
+    [[ $enabled == true ]] && zf-$feature
+  done
+
+  # complete profiling as the final step
+  [[ ${ZF_PROFILE:-0} -eq 0 ]] || { unset ZF_PROFILE && zprof }
+}
+true  # always succeed
+#endregion
