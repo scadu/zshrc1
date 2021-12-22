@@ -1,4 +1,4 @@
-# Zebrafish prompt (made possible with Starship)
+# Zebrafish starship prompt
 # Copyright (c) 2021-2022 mattmc3
 # https://github.com/mattmc3/zebrafish
 # License: MIT
@@ -7,9 +7,9 @@
 add_newline = false
 
 [character]
-success_symbol = "[%%](purple)"
-error_symbol = "[%%](red)"
-vicmd_symbol = "[❮](bold green)"
+success_symbol = "[»](cyan)"
+error_symbol = "[»](red)"
+vicmd_symbol = "[«](green)"
 
 [directory]
 style = "blue"
